@@ -1,9 +1,9 @@
 :root {
   --color-black: #08090b;
   --color-black-soft: #0d0f12;
-  --color-panel: rgba(16, 18, 22, 0.48);
-  --color-panel-hover: rgba(22, 25, 30, 0.64);
-  --color-line: rgba(255, 255, 255, 0.12);
+  --color-panel: rgba(16, 18, 22, 0.46);
+  --color-panel-hover: rgba(22, 25, 30, 0.62);
+  --color-line: rgba(255, 255, 255, 0.13);
   --color-line-soft: rgba(255, 255, 255, 0.07);
   --color-white: #f3f2ee;
   --color-white-soft: rgba(243, 242, 238, 0.62);
@@ -14,10 +14,9 @@
   --motion-fast: 0.15s;
   --motion-standard: 0.2s;
   --motion-slow: 0.25s;
-
   --ease-stage: cubic-bezier(0.22, 1, 0.36, 1);
 
-  --bottom-nav-height: 82px;
+  --bottom-nav-height: 78px;
   --page-padding: 22px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -27,18 +26,16 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html {
+html,
+body {
   width: 100%;
   min-height: 100%;
+  margin: 0;
   background: var(--color-black);
 }
 
 body {
-  width: 100%;
-  min-height: 100dvh;
-  margin: 0;
   overflow-x: hidden;
-  background: var(--color-black);
   color: var(--color-white);
   font-family:
     -apple-system,
@@ -64,22 +61,9 @@ a {
   min-height: 100dvh;
   overflow: hidden;
   background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.025) 0%,
-      transparent 34%
-    ),
-    radial-gradient(
-      circle at 72% 22%,
-      rgba(183, 167, 121, 0.055),
-      transparent 32%
-    ),
-    linear-gradient(
-      180deg,
-      #0b0c0f 0%,
-      #08090b 60%,
-      #050608 100%
-    );
+    linear-gradient(145deg, rgba(255, 255, 255, 0.025), transparent 34%),
+    radial-gradient(circle at 78% 20%, rgba(183, 167, 121, 0.06), transparent 34%),
+    linear-gradient(180deg, #0b0c0f 0%, #08090b 58%, #050608 100%);
 }
 
 .app-shell::before {
@@ -87,24 +71,12 @@ a {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.24;
+  opacity: 0.22;
   background-image:
-    linear-gradient(
-      rgba(255, 255, 255, 0.012) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.012) 1px,
-      transparent 1px
-    );
+    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
   background-size: 48px 48px;
-  mask-image:
-    linear-gradient(
-      to bottom,
-      black,
-      transparent 78%
-    );
+  mask-image: linear-gradient(to bottom, black, transparent 78%);
 }
 
 .ambient {
@@ -136,11 +108,11 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 86px;
+  min-height: 78px;
   padding:
-    max(18px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-top))
     var(--page-padding)
-    10px;
+    8px;
 }
 
 .brand-button,
@@ -227,14 +199,14 @@ a {
   min-height:
     calc(
       100dvh
-      - 86px
+      - 78px
       - var(--bottom-nav-height)
       - var(--safe-bottom)
     );
   padding:
-    26px
+    18px
     var(--page-padding)
-    30px;
+    18px;
 }
 
 .hero-section {
@@ -248,7 +220,7 @@ a {
 }
 
 .hero-copy {
-  margin-bottom: 38px;
+  margin-bottom: 30px;
 }
 
 .hero-label {
@@ -261,18 +233,15 @@ a {
 
 .hero-title {
   margin: 0;
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
-  font-size: clamp(42px, 12vw, 70px);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(42px, 11vw, 66px);
   font-weight: 400;
   line-height: 0.94;
   letter-spacing: -0.045em;
 }
 
 .hero-description {
-  margin: 17px 0 0;
+  margin: 16px 0 0;
   color: var(--color-white-soft);
   font-size: 13px;
   font-weight: 400;
@@ -282,7 +251,7 @@ a {
 .action-stack {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .action-panel {
@@ -297,16 +266,16 @@ a {
 }
 
 .action-panel.open {
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(15, 17, 21, 0.7);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(15, 17, 21, 0.72);
 }
 
 .main-action {
   display: grid;
-  grid-template-columns: 42px 1fr auto;
+  grid-template-columns: 40px 1fr auto;
   align-items: center;
   width: 100%;
-  min-height: 94px;
+  min-height: 96px;
   border: 0;
   padding: 0 22px;
   background: transparent;
@@ -320,8 +289,6 @@ a {
 }
 
 .action-index {
-  align-self: start;
-  padding-top: 29px;
   color: var(--color-white-muted);
   font-family: Georgia, "Times New Roman", serif;
   font-size: 10px;
@@ -330,15 +297,12 @@ a {
 .action-content {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
 .action-title {
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
-  font-size: 28px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
   font-weight: 400;
   letter-spacing: 0.03em;
 }
@@ -352,10 +316,9 @@ a {
 
 .action-arrow {
   color: var(--color-white-soft);
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 200;
-  transition:
-    transform var(--motion-standard) var(--ease-stage);
+  transition: transform var(--motion-standard) var(--ease-stage);
 }
 
 .action-panel.open .action-arrow {
@@ -363,24 +326,21 @@ a {
 }
 
 .expand-panel {
-  display: grid;
-  grid-template-rows: 0fr;
+  display: block;
+  max-height: 0;
+  overflow: hidden;
   opacity: 0;
   border-top: 0 solid transparent;
   transition:
-    grid-template-rows var(--motion-slow) var(--ease-stage),
+    max-height var(--motion-slow) var(--ease-stage),
     opacity var(--motion-fast) ease,
     border-color var(--motion-standard) ease;
 }
 
 .action-panel.open .expand-panel {
-  grid-template-rows: 1fr;
+  max-height: 320px;
   opacity: 1;
   border-top: 1px solid var(--color-line-soft);
-}
-
-.expand-panel > * {
-  overflow: hidden;
 }
 
 .sub-action {
@@ -388,10 +348,10 @@ a {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  min-height: 64px;
+  min-height: 58px;
   border: 0;
   border-bottom: 1px solid var(--color-line-soft);
-  padding: 0 22px 0 64px;
+  padding: 0 22px 0 62px;
   background: transparent;
   color: var(--color-white);
   text-align: left;
@@ -406,7 +366,7 @@ a {
 }
 
 .sub-action:active {
-  padding-left: 68px;
+  padding-left: 66px;
   background: rgba(255, 255, 255, 0.04);
 }
 
@@ -457,7 +417,7 @@ a {
   align-items: center;
   width: 100%;
   max-width: 580px;
-  margin: 36px auto 0;
+  margin: 24px auto 0;
   padding: 0 2px;
 }
 
@@ -512,11 +472,7 @@ a {
   bottom: 0;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  min-height:
-    calc(
-      var(--bottom-nav-height)
-      + var(--safe-bottom)
-    );
+  min-height: calc(var(--bottom-nav-height) + var(--safe-bottom));
   border-top: 1px solid var(--color-line-soft);
   padding-bottom: var(--safe-bottom);
   background: rgba(7, 8, 10, 0.88);
@@ -583,12 +539,7 @@ a {
   position: fixed;
   z-index: 50;
   left: 50%;
-  bottom:
-    calc(
-      var(--bottom-nav-height)
-      + var(--safe-bottom)
-      + 20px
-    );
+  bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + 20px);
   max-width: calc(100% - 44px);
   padding: 11px 16px;
   border: 1px solid var(--color-line);
@@ -611,6 +562,36 @@ a {
   transform: translate(-50%, 0);
 }
 
+@media (max-height: 740px) {
+  .top-header {
+    min-height: 70px;
+  }
+
+  .main-content {
+    padding-top: 12px;
+  }
+
+  .hero-copy {
+    margin-bottom: 22px;
+  }
+
+  .hero-title {
+    font-size: clamp(38px, 10vw, 56px);
+  }
+
+  .main-action {
+    min-height: 84px;
+  }
+
+  .action-title {
+    font-size: 27px;
+  }
+
+  .status-strip {
+    margin-top: 18px;
+  }
+}
+
 @media (min-width: 700px) {
   :root {
     --page-padding: 34px;
@@ -619,10 +600,6 @@ a {
   .top-header {
     padding-left: 34px;
     padding-right: 34px;
-  }
-
-  .main-content {
-    padding-top: 34px;
   }
 
   .hero-title {
@@ -642,12 +619,7 @@ a {
   }
 
   .main-content {
-    min-height:
-      calc(
-        100dvh
-        - 66px
-        - 66px
-      );
+    min-height: calc(100dvh - 66px - 66px);
     padding-top: 10px;
     padding-bottom: 12px;
   }
@@ -670,10 +642,6 @@ a {
 
   .main-action {
     min-height: 72px;
-  }
-
-  .action-index {
-    padding-top: 21px;
   }
 
   .action-title {
