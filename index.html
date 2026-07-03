@@ -1,290 +1,695 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  />
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
 
-  <meta name="theme-color" content="#08090b" />
+  <meta
+    name="theme-color"
+    content="#08090b"
+  >
 
   <title>CHESS STAGE</title>
 
-  <link rel="stylesheet" href="style.css" />
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 </head>
 
 <body>
-  <div class="app-shell">
+
+  <div
+    id="appShell"
+    class="app-shell"
+  >
 
     <div class="ambient ambient-one"></div>
     <div class="ambient ambient-two"></div>
 
-    <header class="top-header">
-      <button
-        class="brand-button"
-        id="brandButton"
-        type="button"
-        aria-label="ホーム"
-      >
-        <span class="brand-mark">CS</span>
+    <!-- HOME -->
 
-        <span class="brand-copy">
-          <span class="brand-title">CHESS STAGE</span>
-          <span class="brand-subtitle">SILENT COMPETITION</span>
-        </span>
-      </button>
+    <section
+      id="homeScreen"
+      class="screen home-screen active"
+    >
 
-      <button
-        class="profile-button"
-        type="button"
-        aria-label="プロフィール"
-      >
-        <span class="profile-ring">
-          <span class="profile-piece">♔</span>
-        </span>
-      </button>
-    </header>
+      <header class="top-header">
 
-    <main class="main-content">
+        <button
+          id="brandButton"
+          class="brand-button"
+          type="button"
+        >
 
-      <section class="hero-section">
-
-        <div class="hero-copy">
-          <p class="hero-label">READY</p>
-
-          <h1 class="hero-title">
-            YOUR MOVE.
-          </h1>
-
-          <p class="hero-description">
-            静かに、勝て。
-          </p>
-        </div>
-
-        <div class="action-stack">
-
-          <section
-            class="action-panel"
-            id="matchPanel"
-          >
-            <button
-              class="main-action"
-              id="matchButton"
-              type="button"
-              aria-expanded="false"
-            >
-              <span class="action-index">01</span>
-
-              <span class="action-content">
-                <span class="action-title">対局</span>
-                <span class="action-subtitle">MATCH</span>
-              </span>
-
-              <span class="action-arrow">↗</span>
-            </button>
-
-            <div
-              class="expand-panel"
-              id="matchMenu"
-            >
-              <button
-                class="sub-action"
-                type="button"
-                data-mode="free"
-              >
-                <span>
-                  <strong>フリー対戦</strong>
-                  <small>FREE MATCH</small>
-                </span>
-
-                <span class="sub-arrow">›</span>
-              </button>
-
-              <button
-                class="sub-action"
-                type="button"
-                data-mode="rank"
-              >
-                <span>
-                  <strong>ランク戦</strong>
-                  <small>RANKED</small>
-                </span>
-
-                <span class="sub-arrow">›</span>
-              </button>
-
-              <button
-                class="sub-action"
-                type="button"
-                data-mode="cpu"
-              >
-                <span>
-                  <strong>CPU戦</strong>
-                  <small>CPU MATCH</small>
-                </span>
-
-                <span class="sub-arrow">›</span>
-              </button>
-
-              <button
-                class="sub-action"
-                type="button"
-                data-mode="spectate"
-              >
-                <span>
-                  <strong>観戦</strong>
-                  <small>WATCH</small>
-                </span>
-
-                <span class="live-indicator">
-                  <span class="live-dot"></span>
-                  LIVE
-                </span>
-              </button>
-            </div>
-          </section>
-
-          <section
-            class="action-panel"
-            id="boxPanel"
-          >
-            <button
-              class="main-action"
-              id="boxButton"
-              type="button"
-              aria-expanded="false"
-            >
-              <span class="action-index">02</span>
-
-              <span class="action-content">
-                <span class="action-title">BOX</span>
-                <span class="action-subtitle">COLLECTION</span>
-              </span>
-
-              <span class="action-arrow">↗</span>
-            </button>
-
-            <div
-              class="expand-panel"
-              id="boxMenu"
-            >
-              <button
-                class="sub-action"
-                type="button"
-                data-box="character"
-              >
-                <span>
-                  <strong>キャラクター</strong>
-                  <small>CHARACTER</small>
-                </span>
-
-                <span class="sub-arrow">›</span>
-              </button>
-
-              <button
-                class="sub-action"
-                type="button"
-                data-box="piece"
-              >
-                <span>
-                  <strong>駒</strong>
-                  <small>PIECES</small>
-                </span>
-
-                <span class="sub-arrow">›</span>
-              </button>
-
-              <button
-                class="sub-action"
-                type="button"
-                data-box="theme"
-              >
-                <span>
-                  <strong>テーマ</strong>
-                  <small>THEME</small>
-                </span>
-
-                <span class="sub-arrow">›</span>
-              </button>
-            </div>
-          </section>
-
-        </div>
-      </section>
-
-      <section class="status-strip">
-        <div class="status-item">
-          <span class="status-label">MODE</span>
-          <span class="status-value">CLASSIC</span>
-        </div>
-
-        <div class="status-line"></div>
-
-        <div class="status-item status-item-right">
-          <span class="status-label">STATUS</span>
-
-          <span class="status-online">
-            <span class="online-dot"></span>
-            READY
+          <span class="brand-mark">
+            CS
           </span>
+
+          <span class="brand-copy">
+
+            <span class="brand-title">
+              CHESS STAGE
+            </span>
+
+            <span class="brand-subtitle">
+              SILENT COMPETITION
+            </span>
+
+          </span>
+
+        </button>
+
+        <button
+          class="profile-button"
+          type="button"
+        >
+
+          <span class="profile-ring">
+            <span class="profile-piece">
+              ♔
+            </span>
+          </span>
+
+        </button>
+
+      </header>
+
+
+      <main class="main-content">
+
+        <section class="hero-section">
+
+          <div class="hero-copy">
+
+            <p class="hero-label">
+              READY
+            </p>
+
+            <h1 class="hero-title">
+              YOUR MOVE.
+            </h1>
+
+            <p class="hero-description">
+              静かに、勝て。
+            </p>
+
+          </div>
+
+
+          <div class="action-stack">
+
+            <!-- MATCH -->
+
+            <section
+              id="matchPanel"
+              class="action-panel"
+            >
+
+              <button
+                id="matchButton"
+                class="main-action"
+                type="button"
+                aria-expanded="false"
+              >
+
+                <span class="action-index">
+                  01
+                </span>
+
+                <span class="action-content">
+
+                  <span class="action-title">
+                    対局
+                  </span>
+
+                  <span class="action-subtitle">
+                    MATCH
+                  </span>
+
+                </span>
+
+                <span class="action-arrow">
+                  ↗
+                </span>
+
+              </button>
+
+
+              <div class="expand-panel">
+
+                <button
+                  class="sub-action"
+                  type="button"
+                  data-mode="free"
+                >
+
+                  <span>
+                    <strong>フリー対戦</strong>
+                    <small>FREE MATCH</small>
+                  </span>
+
+                  <span class="sub-arrow">
+                    ›
+                  </span>
+
+                </button>
+
+
+                <button
+                  class="sub-action"
+                  type="button"
+                  data-mode="rank"
+                >
+
+                  <span>
+                    <strong>ランク戦</strong>
+                    <small>RANKED</small>
+                  </span>
+
+                  <span class="sub-arrow">
+                    ›
+                  </span>
+
+                </button>
+
+
+                <button
+                  id="localMatchButton"
+                  class="sub-action"
+                  type="button"
+                  data-mode="cpu"
+                >
+
+                  <span>
+                    <strong>CPU戦</strong>
+                    <small>CPU MATCH</small>
+                  </span>
+
+                  <span class="sub-arrow">
+                    ›
+                  </span>
+
+                </button>
+
+
+                <button
+                  class="sub-action"
+                  type="button"
+                  data-mode="spectate"
+                >
+
+                  <span>
+                    <strong>観戦</strong>
+                    <small>WATCH</small>
+                  </span>
+
+                  <span class="live-indicator">
+
+                    <span class="live-dot"></span>
+
+                    LIVE
+
+                  </span>
+
+                </button>
+
+              </div>
+
+            </section>
+
+
+            <!-- BOX -->
+
+            <section
+              id="boxPanel"
+              class="action-panel"
+            >
+
+              <button
+                id="boxButton"
+                class="main-action"
+                type="button"
+                aria-expanded="false"
+              >
+
+                <span class="action-index">
+                  02
+                </span>
+
+                <span class="action-content">
+
+                  <span class="action-title">
+                    BOX
+                  </span>
+
+                  <span class="action-subtitle">
+                    COLLECTION
+                  </span>
+
+                </span>
+
+                <span class="action-arrow">
+                  ↗
+                </span>
+
+              </button>
+
+
+              <div class="expand-panel">
+
+                <button
+                  class="sub-action"
+                  type="button"
+                  data-box="character"
+                >
+
+                  <span>
+                    <strong>キャラクター</strong>
+                    <small>CHARACTER</small>
+                  </span>
+
+                  <span class="sub-arrow">
+                    ›
+                  </span>
+
+                </button>
+
+
+                <button
+                  class="sub-action"
+                  type="button"
+                  data-box="piece"
+                >
+
+                  <span>
+                    <strong>駒</strong>
+                    <small>PIECES</small>
+                  </span>
+
+                  <span class="sub-arrow">
+                    ›
+                  </span>
+
+                </button>
+
+
+                <button
+                  class="sub-action"
+                  type="button"
+                  data-box="theme"
+                >
+
+                  <span>
+                    <strong>テーマ</strong>
+                    <small>THEME</small>
+                  </span>
+
+                  <span class="sub-arrow">
+                    ›
+                  </span>
+
+                </button>
+
+              </div>
+
+            </section>
+
+          </div>
+
+        </section>
+
+
+        <div class="status-strip">
+
+          <div class="status-item">
+
+            <span class="status-label">
+              MODE
+            </span>
+
+            <span class="status-value">
+              CLASSIC
+            </span>
+
+          </div>
+
+          <div class="status-line"></div>
+
+          <div class="status-item status-item-right">
+
+            <span class="status-label">
+              STATUS
+            </span>
+
+            <span class="status-online">
+
+              <span class="online-dot"></span>
+
+              READY
+
+            </span>
+
+          </div>
+
         </div>
-      </section>
 
-    </main>
+      </main>
 
-    <nav class="bottom-nav">
 
-      <button
-        class="nav-button active"
-        type="button"
-        data-nav="home"
-      >
-        <span class="nav-icon">⌂</span>
-        <span class="nav-label">HOME</span>
-      </button>
+      <nav class="bottom-nav">
 
-      <button
-        class="nav-button"
-        type="button"
-        data-nav="box"
-      >
-        <span class="nav-icon">◇</span>
-        <span class="nav-label">BOX</span>
-      </button>
+        <button
+          class="nav-button active"
+          type="button"
+          data-nav="home"
+        >
 
-      <button
-        class="nav-button"
-        type="button"
-        data-nav="shop"
-      >
-        <span class="nav-icon">＋</span>
-        <span class="nav-label">SHOP</span>
-      </button>
+          <span class="nav-icon">
+            ⌂
+          </span>
 
-      <button
-        class="nav-button"
-        type="button"
-        data-nav="menu"
-      >
-        <span class="nav-icon">☰</span>
-        <span class="nav-label">MENU</span>
-      </button>
+          <span class="nav-label">
+            HOME
+          </span>
 
-    </nav>
+        </button>
+
+
+        <button
+          class="nav-button"
+          type="button"
+          data-nav="box"
+        >
+
+          <span class="nav-icon">
+            ◇
+          </span>
+
+          <span class="nav-label">
+            BOX
+          </span>
+
+        </button>
+
+
+        <button
+          class="nav-button"
+          type="button"
+          data-nav="shop"
+        >
+
+          <span class="nav-icon">
+            ＋
+          </span>
+
+          <span class="nav-label">
+            SHOP
+          </span>
+
+        </button>
+
+
+        <button
+          class="nav-button"
+          type="button"
+          data-nav="menu"
+        >
+
+          <span class="nav-icon">
+            ☰
+          </span>
+
+          <span class="nav-label">
+            MENU
+          </span>
+
+        </button>
+
+      </nav>
+
+    </section>
+
+
+    <!-- GAME -->
+
+    <section
+      id="gameScreen"
+      class="screen game-screen"
+    >
+
+      <header class="game-header">
+
+        <button
+          id="leaveGameButton"
+          class="game-icon-button"
+          type="button"
+          aria-label="ホームへ戻る"
+        >
+          ←
+        </button>
+
+
+        <div class="game-title-block">
+
+          <span class="game-mode">
+            LOCAL MATCH
+          </span>
+
+          <span
+            id="gameStatus"
+            class="game-status"
+          >
+            WHITE TO MOVE
+          </span>
+
+        </div>
+
+
+        <button
+          id="flipBoardButton"
+          class="game-icon-button"
+          type="button"
+          aria-label="盤面を反転"
+        >
+          ↻
+        </button>
+
+      </header>
+
+
+      <main class="game-main">
+
+        <section class="player-strip player-strip-top">
+
+          <div class="player-avatar">
+            ♚
+          </div>
+
+          <div class="player-copy">
+
+            <span class="player-name">
+              BLACK
+            </span>
+
+            <span class="player-rating">
+              LOCAL PLAYER
+            </span>
+
+          </div>
+
+          <div
+            id="blackTurnMark"
+            class="turn-mark"
+          >
+            WAIT
+          </div>
+
+        </section>
+
+
+        <section class="board-stage">
+
+          <div
+            id="chessBoard"
+            class="chess-board"
+            aria-label="チェス盤"
+          ></div>
+
+        </section>
+
+
+        <section class="player-strip player-strip-bottom">
+
+          <div class="player-avatar">
+            ♔
+          </div>
+
+          <div class="player-copy">
+
+            <span class="player-name">
+              WHITE
+            </span>
+
+            <span class="player-rating">
+              LOCAL PLAYER
+            </span>
+
+          </div>
+
+          <div
+            id="whiteTurnMark"
+            class="turn-mark active"
+          >
+            MOVE
+          </div>
+
+        </section>
+
+
+        <section class="game-controls">
+
+          <button
+            id="assistButton"
+            class="control-button active"
+            type="button"
+          >
+
+            <span class="control-label">
+              ASSIST
+            </span>
+
+            <span
+              id="assistState"
+              class="control-value"
+            >
+              ON
+            </span>
+
+          </button>
+
+
+          <button
+            id="resignButton"
+            class="control-button"
+            type="button"
+          >
+
+            <span class="control-label">
+              RESIGN
+            </span>
+
+            <span class="control-value">
+              投了
+            </span>
+
+          </button>
+
+        </section>
+
+      </main>
+
+    </section>
+
+
+    <!-- PROMOTION -->
 
     <div
-      class="toast"
+      id="promotionOverlay"
+      class="promotion-overlay"
+      aria-hidden="true"
+    >
+
+      <div class="promotion-panel">
+
+        <span class="promotion-label">
+          PROMOTION
+        </span>
+
+        <p class="promotion-title">
+          駒を選択
+        </p>
+
+        <div
+          id="promotionChoices"
+          class="promotion-choices"
+        ></div>
+
+      </div>
+
+    </div>
+
+
+    <!-- GAME RESULT -->
+
+    <div
+      id="resultOverlay"
+      class="result-overlay"
+      aria-hidden="true"
+    >
+
+      <div class="result-panel">
+
+        <span class="result-label">
+          GAME END
+        </span>
+
+        <h2
+          id="resultTitle"
+          class="result-title"
+        >
+          CHECKMATE
+        </h2>
+
+        <p
+          id="resultDescription"
+          class="result-description"
+        >
+          WHITE WINS
+        </p>
+
+        <button
+          id="rematchButton"
+          class="result-button"
+          type="button"
+        >
+          REMATCH
+        </button>
+
+        <button
+          id="resultHomeButton"
+          class="result-button result-button-secondary"
+          type="button"
+        >
+          HOME
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- TOAST -->
+
+    <div
       id="toast"
+      class="toast"
       role="status"
       aria-live="polite"
     >
+
       <span id="toastText"></span>
+
     </div>
 
   </div>
 
+
   <script src="script.js"></script>
+
 </body>
 </html>
