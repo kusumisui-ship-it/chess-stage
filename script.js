@@ -1,3 +1,5 @@
+const appShell = document.querySelector(".app-shell");
+
 const matchPanel = document.getElementById("matchPanel");
 const boxPanel = document.getElementById("boxPanel");
 
@@ -24,19 +26,37 @@ function openPanel(panel, button) {
   button.setAttribute("aria-expanded", "true");
 }
 
+function setMenuActiveState() {
+  const hasOpenPanel =
+    matchPanel.classList.contains("open") ||
+    boxPanel.classList.contains("open");
+
+  appShell.classList.toggle("menu-active", hasOpenPanel);
+}
+
+function resetPanelVisibility() {
+  matchPanel.classList.remove("panel-hidden");
+  boxPanel.classList.remove("panel-hidden");
+}
+
 function closeAllPanels() {
   closePanel(matchPanel, matchButton);
   closePanel(boxPanel, boxButton);
+  resetPanelVisibility();
+  setMenuActiveState();
 }
 
-function togglePanel(targetPanel, targetButton) {
+function togglePanel(targetPanel, targetButton, otherPanel) {
   const isOpen = targetPanel.classList.contains("open");
 
   closeAllPanels();
 
   if (!isOpen) {
     openPanel(targetPanel, targetButton);
+    otherPanel.classList.add("panel-hidden");
   }
+
+  setMenuActiveState();
 }
 
 function showToast(message) {
@@ -59,20 +79,17 @@ function setActiveNav(targetButton) {
 }
 
 matchButton.addEventListener("click", () => {
-  togglePanel(matchPanel, matchButton);
+  togglePanel(matchPanel, matchButton, boxPanel);
 });
 
 boxButton.addEventListener("click", () => {
-  togglePanel(boxPanel, boxButton);
+  togglePanel(boxPanel, boxButton, matchPanel);
 });
 
 brandButton.addEventListener("click", () => {
   closeAllPanels();
 
-  const homeButton = document.querySelector(
-    '[data-nav="home"]'
-  );
-
+  const homeButton = document.querySelector('[data-nav="home"]');
   setActiveNav(homeButton);
 });
 
@@ -90,6 +107,8 @@ navButtons.forEach((button) => {
     if (target === "box") {
       closeAllPanels();
       openPanel(boxPanel, boxButton);
+      matchPanel.classList.add("panel-hidden");
+      setMenuActiveState();
       showToast("BOX");
       return;
     }
