@@ -817,30 +817,73 @@ function cpuMove() {
     K: 100
   };
 
+  function boardValue(state) {
+    let score = 0;
+
+    for (let r = 0; r < 8; r += 1) {
+      for (let c = 0; c < 8; c += 1) {
+        const piece = state.board[r][c];
+        if (!piece) continue;
+
+        const value = values[piece.type] || 0;
+
+        if (piece.color === "b") {
+          score += value;
+        } else {
+          score -= value;
+        }
+      }
+    }
+
+    return score;
+  }
+
   const scoredMoves = moves.map((move) => {
-    const to = squareCoords(move.to);
-    const target = game.board[to.r][to.c];
-
-    let score = target ? (values[target.type] || 0) * 10 : 0;
-
-    const nextGame = applyMove(game, {
+    const cpuMoveChoice = {
       ...move,
       promotion: move.promotion ? "Q" : move.promotion
-    });
+    };
 
-    const movedTo = squareCoords(move.to);
-    const movedPiece = nextGame.board[movedTo.r][movedTo.c];
+    const afterCpu = applyMove(game, cpuMoveChoice);
+    const end = gameEndState(afterCpu);
 
-    if (
-      movedPiece &&
-      isSquareAttacked(
-        nextGame.board,
-        movedTo.r,
-        movedTo.c,
-        "w"
-      )
-    ) {
-      score -= (values[movedPiece.type] || 0) * 8;
+    if (end.over && end.winner === "b") {
+      return {
+        move,
+        score: 10000
+      };
+    }
+
+    let score = boardValue(afterCpu) * 10;
+
+    const whiteMoves = legalMoves(afterCpu);
+
+    if (whiteMoves.length) {
+      let worstReplyScore = Infinity;
+
+      whiteMoves.forEach((whiteMove) => {
+        const whiteChoice = {
+          ...whiteMove,
+          promotion: whiteMove.promotion ? "Q" : whiteMove.promotion
+        };
+
+        const afterWhite = applyMove(afterCpu, whiteChoice);
+        const whiteEnd = gameEndState(afterWhite);
+
+        let replyScore;
+
+        if (whiteEnd.over && whiteEnd.winner === "w") {
+          replyScore = -10000;
+        } else {
+          replyScore = boardValue(afterWhite) * 10;
+        }
+
+        if (replyScore < worstReplyScore) {
+          worstReplyScore = replyScore;
+        }
+      });
+
+      score = worstReplyScore;
     }
 
     return {
@@ -849,7 +892,9 @@ function cpuMove() {
     };
   });
 
-  const bestScore = Math.max(...scoredMoves.map((item) => item.score));
+  const bestScore = Math.max(
+    ...scoredMoves.map((item) => item.score)
+  );
 
   const bestMoves = scoredMoves.filter(
     (item) => item.score === bestScore
