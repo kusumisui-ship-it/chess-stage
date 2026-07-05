@@ -791,9 +791,15 @@ function commitMove(move) {
   renderBoard();
 
   const end = gameEndState(game);
+
   if (end.over) {
     game.over = true;
     setTimeout(() => showResult(end), 250);
+    return;
+  }
+
+  if (game.turn === "b") {
+    setTimeout(cpuMove, 500);
   }
 }
 function cpuMove() {
