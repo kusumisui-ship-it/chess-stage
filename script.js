@@ -796,6 +796,20 @@ function commitMove(move) {
     setTimeout(() => showResult(end), 250);
   }
 }
+function cpuMove() {
+  if (!game || game.over || game.turn !== "b") return;
+
+  const moves = legalMoves(game);
+  if (!moves.length) return;
+
+  const move = moves[Math.floor(Math.random() * moves.length)];
+
+  if (move.promotion) {
+    move.promotion = "Q";
+  }
+
+  commitMove(move);
+}
 
 function showPromotion(move) {
   promotionChoices.innerHTML = "";
