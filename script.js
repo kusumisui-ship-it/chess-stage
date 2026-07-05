@@ -817,42 +817,53 @@ function cpuMove() {
     K: 100
   };
 
-  const captures = moves.filter((move) => {
+  const scoredMoves = moves.map((move) => {
     const to = squareCoords(move.to);
     const target = game.board[to.r][to.c];
-    return target && target.color === "w";
+
+    let score = target ? (values[target.type] || 0) * 10 : 0;
+
+    const nextGame = applyMove(game, {
+      ...move,
+      promotion: move.promotion ? "Q" : move.promotion
+    });
+
+    const movedTo = squareCoords(move.to);
+    const movedPiece = nextGame.board[movedTo.r][movedTo.c];
+
+    if (
+      movedPiece &&
+      isSquareAttacked(
+        nextGame.board,
+        movedTo.r,
+        movedTo.c,
+        "w"
+      )
+    ) {
+      score -= (values[movedPiece.type] || 0) * 8;
+    }
+
+    return {
+      move,
+      score
+    };
   });
 
-  const pool = captures.length ? captures : moves;
+  const bestScore = Math.max(...scoredMoves.map((item) => item.score));
 
-  pool.sort((a, b) => {
-    const aTo = squareCoords(a.to);
-    const bTo = squareCoords(b.to);
-    const aTarget = game.board[aTo.r][aTo.c];
-    const bTarget = game.board[bTo.r][bTo.c];
+  const bestMoves = scoredMoves.filter(
+    (item) => item.score === bestScore
+  );
 
-    return (values[bTarget?.type] || 0) - (values[aTarget?.type] || 0);
-  });
+  const chosen = bestMoves[
+    Math.floor(Math.random() * bestMoves.length)
+  ].move;
 
-  const bestValue = (() => {
-    const to = squareCoords(pool[0].to);
-    const target = game.board[to.r][to.c];
-    return values[target?.type] || 0;
-  })();
-
-  const bestMoves = pool.filter((move) => {
-    const to = squareCoords(move.to);
-    const target = game.board[to.r][to.c];
-    return (values[target?.type] || 0) === bestValue;
-  });
-
-  const move = bestMoves[Math.floor(Math.random() * bestMoves.length)];
-
-  if (move.promotion) {
-    move.promotion = "Q";
+  if (chosen.promotion) {
+    chosen.promotion = "Q";
   }
 
-  commitMove(move);
+  commitMove(chosen);
 }
 
 function showPromotion(move) {
