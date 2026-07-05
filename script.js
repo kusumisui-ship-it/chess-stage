@@ -808,7 +808,45 @@ function cpuMove() {
   const moves = legalMoves(game);
   if (!moves.length) return;
 
-  const move = moves[Math.floor(Math.random() * moves.length)];
+  const values = {
+    P: 1,
+    N: 3,
+    B: 3,
+    R: 5,
+    Q: 9,
+    K: 100
+  };
+
+  const captures = moves.filter((move) => {
+    const to = squareCoords(move.to);
+    const target = game.board[to.r][to.c];
+    return target && target.color === "w";
+  });
+
+  const pool = captures.length ? captures : moves;
+
+  pool.sort((a, b) => {
+    const aTo = squareCoords(a.to);
+    const bTo = squareCoords(b.to);
+    const aTarget = game.board[aTo.r][aTo.c];
+    const bTarget = game.board[bTo.r][bTo.c];
+
+    return (values[bTarget?.type] || 0) - (values[aTarget?.type] || 0);
+  });
+
+  const bestValue = (() => {
+    const to = squareCoords(pool[0].to);
+    const target = game.board[to.r][to.c];
+    return values[target?.type] || 0;
+  })();
+
+  const bestMoves = pool.filter((move) => {
+    const to = squareCoords(move.to);
+    const target = game.board[to.r][to.c];
+    return (values[target?.type] || 0) === bestValue;
+  });
+
+  const move = bestMoves[Math.floor(Math.random() * bestMoves.length)];
 
   if (move.promotion) {
     move.promotion = "Q";
