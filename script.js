@@ -899,18 +899,23 @@ centerSquares.forEach(([r, c]) => {
       });
 
       score += worstReplyScore - boardValue(afterCpu) * 10;
+const movingPiece = game.board[move.from.r][move.from.c];
+
 if (
-  move.piece?.type === "P" &&
-  move.from?.r === 1 &&
-  move.from?.c === 5
+  movingPiece &&
+  movingPiece.type === "P" &&
+  move.from.r === 1 &&
+  move.from.c === 5
 ) {
   score -= 5;
 }
+
 if (
-  move.piece?.type === "N" &&
-  move.from?.r === 0
+  movingPiece &&
+  movingPiece.type === "N" &&
+  move.from.r === 0
 ) {
-  if (move.to?.c === 2 || move.to?.c === 5) {
+  if (move.to.c === 2 || move.to.c === 5) {
     score += 4;
   }
 }
