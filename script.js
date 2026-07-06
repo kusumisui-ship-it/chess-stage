@@ -906,6 +906,14 @@ if (
 ) {
   score -= 5;
 }
+if (
+  move.piece?.type === "N" &&
+  move.from?.r === 0
+) {
+  if (move.to?.c === 2 || move.to?.c === 5) {
+    score += 4;
+  }
+}
     return {
       move,
       score
