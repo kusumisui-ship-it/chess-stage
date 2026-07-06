@@ -899,13 +899,15 @@ centerSquares.forEach(([r, c]) => {
       });
 
       score += worstReplyScore - boardValue(afterCpu) * 10;
-const movingPiece = game.board[move.from.r][move.from.c];
+const from = squareCoords(move.from);
+const to = squareCoords(move.to);
+const movingPiece = game.board[from.r][from.c];
 
 if (
   movingPiece &&
   movingPiece.type === "P" &&
-  move.from.r === 1 &&
-  move.from.c === 5
+  from.r === 1 &&
+  from.c === 5
 ) {
   score -= 5;
 }
@@ -913,9 +915,9 @@ if (
 if (
   movingPiece &&
   movingPiece.type === "N" &&
-  move.from.r === 0
+  from.r === 0
 ) {
-  if (move.to.c === 2 || move.to.c === 5) {
+  if (to.c === 2 || to.c === 5) {
     score += 4;
   }
 }
