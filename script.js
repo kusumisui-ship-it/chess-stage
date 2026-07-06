@@ -855,6 +855,21 @@ function cpuMove() {
     }
 
     let score = boardValue(afterCpu) * 10;
+    
+    const centerSquares = [
+  [3, 3],
+  [3, 4],
+  [4, 3],
+  [4, 4]
+];
+
+centerSquares.forEach(([r, c]) => {
+  const piece = afterCpu.board[r][c];
+
+  if (piece && piece.color === "b") {
+    score += 3;
+  }
+});
 
     const whiteMoves = legalMoves(afterCpu);
 
@@ -883,7 +898,7 @@ function cpuMove() {
         }
       });
 
-      score = worstReplyScore;
+      score += worstReplyScore - boardValue(afterCpu) * 10;
     }
 
     return {
