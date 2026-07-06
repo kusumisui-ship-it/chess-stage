@@ -899,7 +899,13 @@ centerSquares.forEach(([r, c]) => {
       });
 
       score += worstReplyScore - boardValue(afterCpu) * 10;
-
+if (
+  move.piece?.type === "P" &&
+  move.from?.r === 1 &&
+  move.from?.c === 5
+) {
+  score -= 5;
+}
     return {
       move,
       score
