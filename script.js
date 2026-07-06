@@ -899,7 +899,6 @@ centerSquares.forEach(([r, c]) => {
       });
 
       score += worstReplyScore - boardValue(afterCpu) * 10;
-    }
 
     return {
       move,
