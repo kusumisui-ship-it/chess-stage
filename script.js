@@ -899,6 +899,7 @@ centerSquares.forEach(([r, c]) => {
       });
 
       score += worstReplyScore - boardValue(afterCpu) * 10;
+      }
 const from = squareCoords(move.from);
 const to = squareCoords(move.to);
 const movingPiece = game.board[from.r][from.c];
