@@ -179,6 +179,10 @@ let legalTargets = [];
 let boardFlipped = false;
 let assistEnabled = true;
 let pendingPromotion = null;
+let cpuTimer = null;
+let resultTimer = null;
+let cpuThinking = false;
+let gameSessionId = 0;
 
 function createGameFromFen(fen) {
   const [placement, turn, castling, ep, halfmove, fullmove] = fen.split(" ");
@@ -735,6 +739,9 @@ function renderStatus() {
   if (end.over) {
     gameStatusEl.textContent = end.reason;
     gameStatusEl.classList.remove("check");
+  } else if (cpuThinking && game.turn === "b") {
+    gameStatusEl.textContent = "BLACK THINKING";
+    gameStatusEl.classList.remove("check");
   } else {
     const turnText = game.turn === "w" ? "WHITE TO MOVE" : "BLACK TO MOVE";
     const check = isInCheck(game, game.turn);
@@ -742,17 +749,35 @@ function renderStatus() {
     gameStatusEl.classList.toggle("check", check);
   }
 
-  whiteTurnMark.classList.toggle("active", game.turn === "w");
-  blackTurnMark.classList.toggle("active", game.turn === "b");
+  whiteTurnMark.classList.toggle(
+    "active",
+    game.turn === "w" && !game.over && !cpuThinking
+  );
+  blackTurnMark.classList.toggle(
+    "active",
+    game.turn === "b" && !game.over
+  );
 
   whiteTurnMark.textContent = game.turn === "w" ? "MOVE" : "WAIT";
-  blackTurnMark.textContent = game.turn === "b" ? "MOVE" : "WAIT";
+  blackTurnMark.textContent = cpuThinking
+    ? "THINK"
+    : game.turn === "b"
+      ? "MOVE"
+      : "WAIT";
 }
 
 /* INPUT */
 
 function handleSquareTap(square) {
-  if (game.over || pendingPromotion) return;
+  if (
+    !game ||
+    game.over ||
+    pendingPromotion ||
+    cpuThinking ||
+    game.turn !== "w"
+  ) {
+    return;
+  }
 
   const { r, c } = squareCoords(square);
   const piece = game.board[r][c];
@@ -782,169 +807,255 @@ function handleSquareTap(square) {
   renderBoard();
 }
 
+function clearCpuTimer() {
+  if (cpuTimer !== null) {
+    clearTimeout(cpuTimer);
+    cpuTimer = null;
+  }
+}
+
+function clearResultTimer() {
+  if (resultTimer !== null) {
+    clearTimeout(resultTimer);
+    resultTimer = null;
+  }
+}
+
+function clearGameTimers() {
+  clearCpuTimer();
+  clearResultTimer();
+}
+
+function scheduleCpuMove() {
+  clearCpuTimer();
+  cpuThinking = true;
+  renderStatus();
+
+  const sessionId = gameSessionId;
+
+  cpuTimer = setTimeout(() => {
+    cpuTimer = null;
+
+    if (
+      sessionId !== gameSessionId ||
+      !game ||
+      game.over ||
+      game.turn !== "b"
+    ) {
+      cpuThinking = false;
+      if (game) renderStatus();
+      return;
+    }
+
+    cpuMove();
+  }, 500);
+}
+
 function commitMove(move) {
+  clearCpuTimer();
+
   game = applyMove(game, move);
   selectedSquare = null;
   legalTargets = [];
   pendingPromotion = null;
   hidePromotion();
-  renderBoard();
 
   const end = gameEndState(game);
 
   if (end.over) {
     game.over = true;
-    setTimeout(() => showResult(end), 250);
+    cpuThinking = false;
+    renderBoard();
+
+    const sessionId = gameSessionId;
+    clearResultTimer();
+    resultTimer = setTimeout(() => {
+      resultTimer = null;
+      if (sessionId === gameSessionId) {
+        showResult(end);
+      }
+    }, 250);
     return;
   }
 
+  cpuThinking = game.turn === "b";
+  renderBoard();
+
   if (game.turn === "b") {
-    setTimeout(cpuMove, 500);
+    scheduleCpuMove();
   }
 }
+
 function cpuMove() {
-  if (!game || game.over || game.turn !== "b") return;
-
-  const moves = legalMoves(game);
-  if (!moves.length) return;
-
-  const values = {
-    P: 1,
-    N: 3,
-    B: 3,
-    R: 5,
-    Q: 9,
-    K: 100
-  };
-
-  function boardValue(state) {
-    let score = 0;
-
-    for (let r = 0; r < 8; r += 1) {
-      for (let c = 0; c < 8; c += 1) {
-        const piece = state.board[r][c];
-        if (!piece) continue;
-
-        const value = values[piece.type] || 0;
-
-        if (piece.color === "b") {
-          score += value;
-        } else {
-          score -= value;
-        }
-      }
-    }
-
-    return score;
+  if (!game || game.over || game.turn !== "b") {
+    cpuThinking = false;
+    if (game) renderStatus();
+    return;
   }
 
-  const scoredMoves = moves.map((move) => {
-    const cpuMoveChoice = {
-      ...move,
-      promotion: move.promotion ? "Q" : move.promotion
+  try {
+    const moves = legalMoves(game);
+
+    if (!moves.length) {
+      const end = gameEndState(game);
+      game.over = end.over;
+      cpuThinking = false;
+      renderBoard();
+      if (end.over) showResult(end);
+      return;
+    }
+
+    const values = {
+      P: 100,
+      N: 320,
+      B: 330,
+      R: 500,
+      Q: 900,
+      K: 20000
     };
 
-    const afterCpu = applyMove(game, cpuMoveChoice);
-    const end = gameEndState(afterCpu);
+    function boardValue(state) {
+      let score = 0;
 
-    if (end.over && end.winner === "b") {
-      return {
-        move,
-        score: 10000
-      };
+      for (let r = 0; r < 8; r += 1) {
+        for (let c = 0; c < 8; c += 1) {
+          const piece = state.board[r][c];
+          if (!piece) continue;
+
+          const value = values[piece.type] || 0;
+          score += piece.color === "b" ? value : -value;
+        }
+      }
+
+      return score;
     }
 
-    let score = boardValue(afterCpu) * 10;
-    
-    const centerSquares = [
-  [3, 3],
-  [3, 4],
-  [4, 3],
-  [4, 4]
-];
+    function positionValue(state) {
+      let score = 0;
+      const centerSquares = [
+        [3, 3],
+        [3, 4],
+        [4, 3],
+        [4, 4]
+      ];
 
-centerSquares.forEach(([r, c]) => {
-  const piece = afterCpu.board[r][c];
+      centerSquares.forEach(([r, c]) => {
+        const piece = state.board[r][c];
+        if (!piece) return;
+        score += piece.color === "b" ? 18 : -18;
+      });
 
-  if (piece && piece.color === "b") {
-    score += 3;
-  }
-});
+      const blackKnightSquares = {
+        c6: 22,
+        f6: 22,
+        a6: -24,
+        h6: -24
+      };
 
-    const whiteMoves = legalMoves(afterCpu);
-
-    if (whiteMoves.length) {
-      let worstReplyScore = Infinity;
-
-      whiteMoves.forEach((whiteMove) => {
-        const whiteChoice = {
-          ...whiteMove,
-          promotion: whiteMove.promotion ? "Q" : whiteMove.promotion
-        };
-
-        const afterWhite = applyMove(afterCpu, whiteChoice);
-        const whiteEnd = gameEndState(afterWhite);
-
-        let replyScore;
-
-        if (whiteEnd.over && whiteEnd.winner === "w") {
-          replyScore = -10000;
-        } else {
-          replyScore = boardValue(afterWhite) * 10;
-        }
-
-        if (replyScore < worstReplyScore) {
-          worstReplyScore = replyScore;
+      Object.entries(blackKnightSquares).forEach(([square, bonus]) => {
+        const { r, c } = squareCoords(square);
+        const piece = state.board[r][c];
+        if (piece && piece.color === "b" && piece.type === "N") {
+          score += bonus;
         }
       });
 
-      score += worstReplyScore - boardValue(afterCpu) * 10;
+      const blackKing = findKing(state.board, "b");
+      if (
+        blackKing &&
+        blackKing.r === 0 &&
+        (blackKing.c === 2 || blackKing.c === 6)
+      ) {
+        score += 28;
       }
-const from = squareCoords(move.from);
-const to = squareCoords(move.to);
-const movingPiece = game.board[from.r][from.c];
 
-if (
-  movingPiece &&
-  movingPiece.type === "P" &&
-  from.r === 1 &&
-  from.c === 5
-) {
-  score -= 5;
-}
+      return score;
+    }
 
-if (
-  movingPiece &&
-  movingPiece.type === "N" &&
-  from.r === 0
-) {
-  if (to.c === 2 || to.c === 5) {
-    score += 4;
+    function evaluate(state) {
+      return boardValue(state) + positionValue(state);
+    }
+
+    const scoredMoves = moves.map((move) => {
+      const cpuChoice = {
+        ...move,
+        promotion: move.promotion ? "Q" : move.promotion
+      };
+
+      const afterCpu = applyMove(game, cpuChoice);
+      const end = gameEndState(afterCpu);
+
+      if (end.over) {
+        if (end.winner === "b") {
+          return { move: cpuChoice, score: 1000000 };
+        }
+
+        return { move: cpuChoice, score: 0 };
+      }
+
+      const whiteMoves = legalMoves(afterCpu);
+      let worstReplyScore = evaluate(afterCpu);
+
+      if (whiteMoves.length) {
+        worstReplyScore = Infinity;
+
+        whiteMoves.forEach((whiteMove) => {
+          const whiteChoice = {
+            ...whiteMove,
+            promotion: whiteMove.promotion ? "Q" : whiteMove.promotion
+          };
+
+          const afterWhite = applyMove(afterCpu, whiteChoice);
+          const whiteEnd = gameEndState(afterWhite);
+
+          let replyScore;
+
+          if (whiteEnd.over && whiteEnd.winner === "w") {
+            replyScore = -1000000;
+          } else if (whiteEnd.over) {
+            replyScore = 0;
+          } else {
+            replyScore = evaluate(afterWhite);
+          }
+
+          if (replyScore < worstReplyScore) {
+            worstReplyScore = replyScore;
+          }
+        });
+      }
+
+      if (
+        move.from === "f7" &&
+        game.fullmove <= 5
+      ) {
+        worstReplyScore -= 35;
+      }
+
+      return {
+        move: cpuChoice,
+        score: worstReplyScore
+      };
+    });
+
+    const bestScore = Math.max(
+      ...scoredMoves.map((item) => item.score)
+    );
+
+    const bestMoves = scoredMoves.filter(
+      (item) => item.score === bestScore
+    );
+
+    const chosen = bestMoves[
+      Math.floor(Math.random() * bestMoves.length)
+    ].move;
+
+    commitMove(chosen);
+  } catch (error) {
+    cpuThinking = false;
+    console.error("CPU move failed", error);
+    renderStatus();
+    showToast("CPU MOVE ERROR");
   }
-}
-    return {
-      move,
-      score
-    };
-  });
-
-  const bestScore = Math.max(
-    ...scoredMoves.map((item) => item.score)
-  );
-
-  const bestMoves = scoredMoves.filter(
-    (item) => item.score === bestScore
-  );
-
-  const chosen = bestMoves[
-    Math.floor(Math.random() * bestMoves.length)
-  ].move;
-
-  if (chosen.promotion) {
-    chosen.promotion = "Q";
-  }
-
-  commitMove(chosen);
 }
 
 function showPromotion(move) {
@@ -998,6 +1109,9 @@ function hideResult() {
 }
 
 function startLocalGame() {
+  gameSessionId += 1;
+  clearGameTimers();
+  cpuThinking = false;
   game = createGameFromFen(START_FEN);
   selectedSquare = null;
   legalTargets = [];
@@ -1012,6 +1126,9 @@ function startLocalGame() {
 }
 
 function goHome() {
+  gameSessionId += 1;
+  clearGameTimers();
+  cpuThinking = false;
   gameScreen.classList.remove("active");
   homeScreen.classList.add("active");
   hideResult();
@@ -1039,11 +1156,15 @@ assistButton.addEventListener("click", () => {
 resignButton.addEventListener("click", () => {
   if (!game || game.over) return;
 
+  gameSessionId += 1;
+  clearGameTimers();
+  cpuThinking = false;
   game.over = true;
+  renderStatus();
   showResult({
     over: true,
     reason: "RESIGN",
-    winner: opposite(game.turn)
+    winner: "b"
   });
 });
 
