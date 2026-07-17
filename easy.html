@@ -39,8 +39,10 @@
           const originalCpuMove = cpuMove;
           const originalCommitMove = commitMove;
           const originalRenderBoard = renderBoard;
+          const originalShowResult = showResult;
           let easyMode = true;
           let lastMove = null;
+          let lastRecordedSessionId = null;
 
           const utilityStyle = document.createElement("style");
           utilityStyle.textContent =
@@ -70,8 +72,61 @@
             "color:rgba(243,242,238,0.52);" +
             "font-family:Georgia,serif;font-size:12px;" +
             "line-height:1;letter-spacing:0.04em;white-space:nowrap;" +
+            "}" +
+            ".local-record {" +
+            "display:block;margin-top:3px;" +
+            "color:rgba(183,167,121,0.72);" +
+            "font-size:7px;font-weight:700;letter-spacing:0.18em;" +
             "}";
           document.head.appendChild(utilityStyle);
+
+          const recordKey = "chessStageLocalRecordV1";
+          let localRecord = {
+            wins: 0,
+            losses: 0,
+            draws: 0
+          };
+
+          try {
+            const savedRecord = JSON.parse(localStorage.getItem(recordKey));
+            if (savedRecord && typeof savedRecord === "object") {
+              localRecord = {
+                wins: Number(savedRecord.wins) || 0,
+                losses: Number(savedRecord.losses) || 0,
+                draws: Number(savedRecord.draws) || 0
+              };
+            }
+          } catch (error) {
+            console.warn("Local record could not be loaded", error);
+          }
+
+          const gameTitleBlock = document.querySelector(".game-title-block");
+          let localRecordValue = document.getElementById("localRecordValue");
+
+          if (gameTitleBlock && !localRecordValue) {
+            localRecordValue = document.createElement("span");
+            localRecordValue.id = "localRecordValue";
+            localRecordValue.className = "local-record";
+            gameTitleBlock.appendChild(localRecordValue);
+          }
+
+          function renderLocalRecord() {
+            if (!localRecordValue) return;
+            localRecordValue.textContent =
+              "W " + localRecord.wins +
+              "   L " + localRecord.losses +
+              "   D " + localRecord.draws;
+          }
+
+          function saveLocalRecord() {
+            try {
+              localStorage.setItem(recordKey, JSON.stringify(localRecord));
+            } catch (error) {
+              console.warn("Local record could not be saved", error);
+            }
+          }
+
+          renderLocalRecord();
 
           const boardStage = document.querySelector(".board-stage");
           let moveHistoryValue = null;
@@ -241,6 +296,31 @@
               to: move.to
             };
             originalCommitMove(move);
+          };
+
+          showResult = function patchedShowResult(end) {
+            originalShowResult(end);
+
+            if (
+              !end ||
+              !end.over ||
+              lastRecordedSessionId === gameSessionId
+            ) {
+              return;
+            }
+
+            lastRecordedSessionId = gameSessionId;
+
+            if (end.winner === "w") {
+              localRecord.wins += 1;
+            } else if (end.winner === "b") {
+              localRecord.losses += 1;
+            } else {
+              localRecord.draws += 1;
+            }
+
+            saveLocalRecord();
+            renderLocalRecord();
           };
 
           const controls = document.querySelector(".game-controls");
