@@ -64,6 +64,12 @@
             ".move-history-value {" +
             "min-width:0;overflow:hidden;text-overflow:ellipsis;" +
             "white-space:nowrap;font-size:9px;letter-spacing:0.08em;" +
+            "}" +
+            ".captured-pieces {" +
+            "display:block;min-height:13px;margin-top:2px;" +
+            "color:rgba(243,242,238,0.52);" +
+            "font-family:Georgia,serif;font-size:12px;" +
+            "line-height:1;letter-spacing:0.04em;white-space:nowrap;" +
             "}";
           document.head.appendChild(utilityStyle);
 
@@ -79,6 +85,98 @@
               '<span id="moveHistoryValue" class="move-history-value">—</span>';
             boardStage.insertAdjacentElement("afterend", historyStrip);
             moveHistoryValue = document.getElementById("moveHistoryValue");
+          }
+
+          let capturedByBlack = document.getElementById("capturedByBlack");
+          let capturedByWhite = document.getElementById("capturedByWhite");
+
+          if (!capturedByBlack) {
+            const blackPlayerCopy = document.querySelector(
+              ".player-strip-top .player-copy"
+            );
+            if (blackPlayerCopy) {
+              capturedByBlack = document.createElement("span");
+              capturedByBlack.id = "capturedByBlack";
+              capturedByBlack.className = "captured-pieces";
+              capturedByBlack.textContent = "—";
+              blackPlayerCopy.appendChild(capturedByBlack);
+            }
+          }
+
+          if (!capturedByWhite) {
+            const whitePlayerCopy = document.querySelector(
+              ".player-strip-bottom .player-copy"
+            );
+            if (whitePlayerCopy) {
+              capturedByWhite = document.createElement("span");
+              capturedByWhite.id = "capturedByWhite";
+              capturedByWhite.className = "captured-pieces";
+              capturedByWhite.textContent = "—";
+              whitePlayerCopy.appendChild(capturedByWhite);
+            }
+          }
+
+          const initialPieceCounts = {
+            Q: 1,
+            R: 2,
+            B: 2,
+            N: 2,
+            P: 8
+          };
+
+          function missingPieces(color) {
+            const currentCounts = {
+              Q: 0,
+              R: 0,
+              B: 0,
+              N: 0,
+              P: 0
+            };
+
+            if (!game || !game.board) return [];
+
+            game.board.forEach((row) => {
+              row.forEach((piece) => {
+                if (
+                  piece &&
+                  piece.color === color &&
+                  Object.prototype.hasOwnProperty.call(currentCounts, piece.type)
+                ) {
+                  currentCounts[piece.type] += 1;
+                }
+              });
+            });
+
+            const missing = [];
+            ["Q", "R", "B", "N", "P"].forEach((type) => {
+              const count = Math.max(
+                0,
+                initialPieceCounts[type] - currentCounts[type]
+              );
+
+              for (let index = 0; index < count; index += 1) {
+                missing.push(PIECE_SYMBOLS[color + type]);
+              }
+            });
+
+            return missing;
+          }
+
+          function updateCapturedPieces() {
+            const whitePiecesLost = missingPieces("w");
+            const blackPiecesLost = missingPieces("b");
+
+            if (capturedByBlack) {
+              capturedByBlack.textContent = whitePiecesLost.length
+                ? whitePiecesLost.join("")
+                : "—";
+            }
+
+            if (capturedByWhite) {
+              capturedByWhite.textContent = blackPiecesLost.length
+                ? blackPiecesLost.join("")
+                : "—";
+            }
           }
 
           function formatMove(move, index) {
@@ -116,6 +214,7 @@
           renderBoard = function patchedRenderBoard() {
             originalRenderBoard();
             updateMoveHistory();
+            updateCapturedPieces();
 
             if (!game || !game.history || game.history.length === 0) {
               lastMove = null;
