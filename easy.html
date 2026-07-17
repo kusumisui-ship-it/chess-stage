@@ -25,13 +25,21 @@
   </style>
 </head>
 <body>
-  <iframe id="gameFrame" src="./index.html" title="CHESS STAGE"></iframe>
+  <iframe
+    id="gameFrame"
+    src="./index.html?v=easy-integrated-v1"
+    title="CHESS STAGE"
+  ></iframe>
 
   <script>
     const gameFrame = document.getElementById("gameFrame");
 
     gameFrame.addEventListener("load", () => {
       const frameDocument = gameFrame.contentDocument;
+      if (!frameDocument || !frameDocument.body) return;
+      if (frameDocument.body.dataset.easyIntegrated === "v1") return;
+
+      frameDocument.body.dataset.easyIntegrated = "v1";
       const patch = frameDocument.createElement("script");
 
       patch.textContent = `
@@ -40,16 +48,22 @@
           const originalCommitMove = commitMove;
           const originalRenderBoard = renderBoard;
           const originalShowResult = showResult;
+
+          const recordKey = "chessStageLocalRecordV1";
+          const saveKey = "chessStageSavedCpuGameV3";
+
           let easyMode = true;
           let lastMove = null;
           let lastRecordedSessionId = null;
+          let lastSavedSignature = "";
+          let saveWatcher = null;
 
           const utilityStyle = document.createElement("style");
           utilityStyle.textContent =
             ".square.last-move {" +
             "box-shadow:" +
-            "inset 0 0 0 2px rgba(211, 197, 151, 0.56)," +
-            "inset 0 0 24px rgba(211, 197, 151, 0.22);" +
+            "inset 0 0 0 2px rgba(211,197,151,0.56)," +
+            "inset 0 0 24px rgba(211,197,151,0.22);" +
             "}" +
             ".move-history-strip {" +
             "display:flex;align-items:center;gap:10px;" +
@@ -67,6 +81,11 @@
             "min-width:0;overflow:hidden;text-overflow:ellipsis;" +
             "white-space:nowrap;font-size:9px;letter-spacing:0.08em;" +
             "}" +
+            ".save-state {" +
+            "flex:0 0 auto;margin-left:auto;white-space:nowrap;" +
+            "color:rgba(183,167,121,0.82);" +
+            "font-size:7px;font-weight:700;letter-spacing:0.14em;" +
+            "}" +
             ".captured-pieces {" +
             "display:block;min-height:13px;margin-top:2px;" +
             "color:rgba(243,242,238,0.52);" +
@@ -80,7 +99,6 @@
             "}";
           document.head.appendChild(utilityStyle);
 
-          const recordKey = "chessStageLocalRecordV1";
           let localRecord = {
             wins: 0,
             losses: 0,
@@ -130,6 +148,7 @@
 
           const boardStage = document.querySelector(".board-stage");
           let moveHistoryValue = null;
+          let saveStateValue = null;
 
           if (boardStage && !document.getElementById("moveHistoryStrip")) {
             const historyStrip = document.createElement("div");
@@ -137,9 +156,18 @@
             historyStrip.className = "move-history-strip";
             historyStrip.innerHTML =
               '<span class="move-history-label">MOVES</span>' +
-              '<span id="moveHistoryValue" class="move-history-value">—</span>';
+              '<span id="moveHistoryValue" class="move-history-value">—</span>' +
+              '<span id="saveStateValue" class="save-state">SAVE READY</span>';
             boardStage.insertAdjacentElement("afterend", historyStrip);
             moveHistoryValue = document.getElementById("moveHistoryValue");
+            saveStateValue = document.getElementById("saveStateValue");
+          } else {
+            moveHistoryValue = document.getElementById("moveHistoryValue");
+            saveStateValue = document.getElementById("saveStateValue");
+          }
+
+          function setSaveState(text) {
+            if (saveStateValue) saveStateValue.textContent = text;
           }
 
           let capturedByBlack = document.getElementById("capturedByBlack");
@@ -266,6 +294,67 @@
               .join("   ");
           }
 
+          function difficultyText() {
+            return easyMode ? "EASY" : "NORMAL";
+          }
+
+          function saveSignature() {
+            if (!game) return "";
+            return JSON.stringify({
+              difficulty: difficultyText(),
+              game
+            });
+          }
+
+          function clearSavedGame() {
+            try {
+              localStorage.removeItem(saveKey);
+              lastSavedSignature = "";
+              setSaveState("SAVE READY");
+            } catch (error) {
+              console.warn("Saved game could not be cleared", error);
+              setSaveState("SAVE ERROR");
+            }
+          }
+
+          function saveCurrentGame() {
+            try {
+              if (
+                !game ||
+                game.over ||
+                !game.history ||
+                game.history.length === 0
+              ) {
+                if (!game || !game.history || game.history.length === 0) {
+                  setSaveState("SAVE READY");
+                }
+                return false;
+              }
+
+              const signature = saveSignature();
+              if (signature === lastSavedSignature) {
+                return true;
+              }
+
+              localStorage.setItem(
+                saveKey,
+                JSON.stringify({
+                  version: 3,
+                  savedAt: Date.now(),
+                  difficulty: difficultyText(),
+                  game
+                })
+              );
+              lastSavedSignature = signature;
+              setSaveState("SAVED");
+              return true;
+            } catch (error) {
+              console.warn("Game could not be saved", error);
+              setSaveState("SAVE ERROR");
+              return false;
+            }
+          }
+
           renderBoard = function patchedRenderBoard() {
             originalRenderBoard();
             updateMoveHistory();
@@ -296,9 +385,11 @@
               to: move.to
             };
             originalCommitMove(move);
+            setTimeout(saveCurrentGame, 0);
           };
 
           showResult = function patchedShowResult(end) {
+            clearSavedGame();
             originalShowResult(end);
 
             if (
@@ -324,10 +415,12 @@
           };
 
           const controls = document.querySelector(".game-controls");
-          if (controls && !document.getElementById("difficultyButton")) {
+          let difficultyButton = document.getElementById("difficultyButton");
+
+          if (controls && !difficultyButton) {
             controls.style.gridTemplateColumns = "repeat(3, minmax(0, 1fr))";
 
-            const difficultyButton = document.createElement("button");
+            difficultyButton = document.createElement("button");
             difficultyButton.id = "difficultyButton";
             difficultyButton.className = "control-button active";
             difficultyButton.type = "button";
@@ -336,14 +429,181 @@
               '<span id="difficultyState" class="control-value">EASY</span>';
 
             controls.insertBefore(difficultyButton, controls.lastElementChild);
+          }
 
+          function renderDifficulty() {
+            const difficultyState = document.getElementById("difficultyState");
+            if (difficultyState) {
+              difficultyState.textContent = difficultyText();
+            }
+            if (difficultyButton) {
+              difficultyButton.classList.toggle("active", easyMode);
+            }
+          }
+
+          if (difficultyButton) {
             difficultyButton.addEventListener("click", () => {
               easyMode = !easyMode;
-              difficultyButton.classList.toggle("active", easyMode);
-              document.getElementById("difficultyState").textContent =
-                easyMode ? "EASY" : "NORMAL";
+              renderDifficulty();
               showToast(easyMode ? "CPU LEVEL — EASY" : "CPU LEVEL — NORMAL");
+              setTimeout(saveCurrentGame, 0);
             });
+          }
+
+          const originalFlipButton = document.getElementById("flipBoardButton");
+          let undoButton = null;
+
+          if (originalFlipButton) {
+            undoButton = originalFlipButton.cloneNode(true);
+            originalFlipButton.replaceWith(undoButton);
+            undoButton.textContent = "↶";
+            undoButton.setAttribute("aria-label", "1ターン戻す");
+            undoButton.style.opacity = "1";
+            undoButton.style.cursor = "pointer";
+          }
+
+          function cleanMove(move) {
+            return {
+              from: move.from,
+              to: move.to,
+              promotion: move.promotion,
+              enPassant: move.enPassant,
+              castle: move.castle
+            };
+          }
+
+          function undoPlayerTurn() {
+            if (!game || !game.history || game.history.length === 0) {
+              showToast("NO TURN TO UNDO");
+              return;
+            }
+
+            if (pendingPromotion) {
+              showToast("FINISH PROMOTION FIRST");
+              return;
+            }
+
+            if (game.over) {
+              showToast("GAME ALREADY ENDED");
+              return;
+            }
+
+            const removeCount = game.turn === "b" || cpuThinking ? 1 : 2;
+            const keepCount = Math.max(0, game.history.length - removeCount);
+            const retainedMoves = game.history
+              .slice(0, keepCount)
+              .map(cleanMove);
+
+            gameSessionId += 1;
+            clearGameTimers();
+            cpuThinking = false;
+            selectedSquare = null;
+            legalTargets = [];
+            pendingPromotion = null;
+            hidePromotion();
+            hideResult();
+
+            let rebuiltGame = createGameFromFen(START_FEN);
+            retainedMoves.forEach((move) => {
+              rebuiltGame = applyMove(rebuiltGame, move);
+            });
+
+            game = rebuiltGame;
+            boardFlipped = false;
+            renderBoard();
+
+            if (game.history.length === 0) {
+              clearSavedGame();
+            } else {
+              lastSavedSignature = "";
+              saveCurrentGame();
+            }
+
+            showToast(removeCount === 1 ? "MOVE UNDONE" : "TURN UNDONE");
+          }
+
+          if (undoButton) {
+            undoButton.addEventListener("click", undoPlayerTurn);
+          }
+
+          function restoreSavedGame() {
+            let saved = null;
+
+            try {
+              saved = JSON.parse(localStorage.getItem(saveKey));
+            } catch (error) {
+              console.warn("Saved game could not be read", error);
+              clearSavedGame();
+              return false;
+            }
+
+            if (
+              !saved ||
+              saved.version !== 3 ||
+              !saved.game ||
+              !Array.isArray(saved.game.board) ||
+              !Array.isArray(saved.game.history) ||
+              saved.game.history.length === 0 ||
+              saved.game.over
+            ) {
+              setSaveState("SAVE READY");
+              return false;
+            }
+
+            easyMode = saved.difficulty !== "NORMAL";
+            renderDifficulty();
+
+            gameSessionId += 1;
+            clearGameTimers();
+            game = saved.game;
+            game.over = false;
+            selectedSquare = null;
+            legalTargets = [];
+            pendingPromotion = null;
+            cpuThinking = false;
+            boardFlipped = false;
+            hidePromotion();
+            hideResult();
+
+            const home = document.getElementById("homeScreen");
+            const gameView = document.getElementById("gameScreen");
+            if (home) home.classList.remove("active");
+            if (gameView) gameView.classList.add("active");
+
+            renderBoard();
+            lastSavedSignature = saveSignature();
+            setSaveState("RESTORED");
+            showToast("GAME RESTORED");
+
+            if (game.turn === "b") {
+              scheduleCpuMove();
+            }
+
+            return true;
+          }
+
+          const newGameButton = document.getElementById("localMatchButton");
+          const rematch = document.getElementById("rematchButton");
+
+          if (newGameButton) {
+            newGameButton.addEventListener("click", clearSavedGame, true);
+          }
+
+          if (rematch) {
+            rematch.addEventListener("click", clearSavedGame, true);
+          }
+
+          document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "hidden") {
+              saveCurrentGame();
+            }
+          });
+
+          window.addEventListener("pagehide", saveCurrentGame);
+          window.addEventListener("beforeunload", saveCurrentGame);
+
+          if (saveWatcher === null) {
+            saveWatcher = setInterval(saveCurrentGame, 250);
           }
 
           cpuMove = function patchedCpuMove() {
@@ -462,6 +722,11 @@
               showToast("CPU MOVE ERROR");
             }
           };
+
+          boardFlipped = false;
+          renderDifficulty();
+          setSaveState("SAVE READY");
+          restoreSavedGame();
         })();
       `;
 
