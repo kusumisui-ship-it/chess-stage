@@ -42,30 +42,91 @@
           let easyMode = true;
           let lastMove = null;
 
-          const lastMoveStyle = document.createElement("style");
-          lastMoveStyle.textContent =
+          const utilityStyle = document.createElement("style");
+          utilityStyle.textContent =
             ".square.last-move {" +
             "box-shadow:" +
             "inset 0 0 0 2px rgba(211, 197, 151, 0.56)," +
             "inset 0 0 24px rgba(211, 197, 151, 0.22);" +
+            "}" +
+            ".move-history-strip {" +
+            "display:flex;align-items:center;gap:10px;" +
+            "width:min(100%,620px);min-height:28px;" +
+            "margin:2px auto 0;padding:0 6px;" +
+            "border-top:1px solid rgba(255,255,255,0.07);" +
+            "border-bottom:1px solid rgba(255,255,255,0.07);" +
+            "color:rgba(243,242,238,0.62);overflow:hidden;" +
+            "}" +
+            ".move-history-label {" +
+            "flex:0 0 auto;color:rgba(243,242,238,0.34);" +
+            "font-size:7px;font-weight:700;letter-spacing:0.22em;" +
+            "}" +
+            ".move-history-value {" +
+            "min-width:0;overflow:hidden;text-overflow:ellipsis;" +
+            "white-space:nowrap;font-size:9px;letter-spacing:0.08em;" +
             "}";
-          document.head.appendChild(lastMoveStyle);
+          document.head.appendChild(utilityStyle);
+
+          const boardStage = document.querySelector(".board-stage");
+          let moveHistoryValue = null;
+
+          if (boardStage && !document.getElementById("moveHistoryStrip")) {
+            const historyStrip = document.createElement("div");
+            historyStrip.id = "moveHistoryStrip";
+            historyStrip.className = "move-history-strip";
+            historyStrip.innerHTML =
+              '<span class="move-history-label">MOVES</span>' +
+              '<span id="moveHistoryValue" class="move-history-value">—</span>';
+            boardStage.insertAdjacentElement("afterend", historyStrip);
+            moveHistoryValue = document.getElementById("moveHistoryValue");
+          }
+
+          function formatMove(move, index) {
+            const moveNumber = Math.floor(index / 2) + 1;
+            const prefix = index % 2 === 0 ? moveNumber + ". " : "… ";
+
+            if (move.castle) {
+              const castleText = move.castle.toLowerCase() === "q"
+                ? "O-O-O"
+                : "O-O";
+              return prefix + castleText;
+            }
+
+            const separator = move.capture ? "×" : "–";
+            const promotion = move.promotion ? "=" + move.promotion : "";
+            return prefix + move.from.toUpperCase() + separator +
+              move.to.toUpperCase() + promotion;
+          }
+
+          function updateMoveHistory() {
+            if (!moveHistoryValue) return;
+
+            if (!game || !game.history || game.history.length === 0) {
+              moveHistoryValue.textContent = "—";
+              return;
+            }
+
+            const start = Math.max(0, game.history.length - 4);
+            moveHistoryValue.textContent = game.history
+              .slice(start)
+              .map((move, offset) => formatMove(move, start + offset))
+              .join("   ");
+          }
 
           renderBoard = function patchedRenderBoard() {
             originalRenderBoard();
+            updateMoveHistory();
 
             if (!game || !game.history || game.history.length === 0) {
               lastMove = null;
               return;
             }
 
-            if (!lastMove) {
-              const latestMove = game.history[game.history.length - 1];
-              lastMove = {
-                from: latestMove.from,
-                to: latestMove.to
-              };
-            }
+            const latestMove = game.history[game.history.length - 1];
+            lastMove = {
+              from: latestMove.from,
+              to: latestMove.to
+            };
 
             [lastMove.from, lastMove.to].forEach((squareName) => {
               const square = document.querySelector(
