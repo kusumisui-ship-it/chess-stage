@@ -37,7 +37,51 @@
       patch.textContent = `
         (() => {
           const originalCpuMove = cpuMove;
+          const originalCommitMove = commitMove;
+          const originalRenderBoard = renderBoard;
           let easyMode = true;
+          let lastMove = null;
+
+          const lastMoveStyle = document.createElement("style");
+          lastMoveStyle.textContent =
+            ".square.last-move {" +
+            "box-shadow:" +
+            "inset 0 0 0 2px rgba(211, 197, 151, 0.56)," +
+            "inset 0 0 24px rgba(211, 197, 151, 0.22);" +
+            "}";
+          document.head.appendChild(lastMoveStyle);
+
+          renderBoard = function patchedRenderBoard() {
+            originalRenderBoard();
+
+            if (!game || !game.history || game.history.length === 0) {
+              lastMove = null;
+              return;
+            }
+
+            if (!lastMove) {
+              const latestMove = game.history[game.history.length - 1];
+              lastMove = {
+                from: latestMove.from,
+                to: latestMove.to
+              };
+            }
+
+            [lastMove.from, lastMove.to].forEach((squareName) => {
+              const square = document.querySelector(
+                '.square[data-square="' + squareName + '"]'
+              );
+              if (square) square.classList.add("last-move");
+            });
+          };
+
+          commitMove = function patchedCommitMove(move) {
+            lastMove = {
+              from: move.from,
+              to: move.to
+            };
+            originalCommitMove(move);
+          };
 
           const controls = document.querySelector(".game-controls");
           if (controls && !document.getElementById("difficultyButton")) {
