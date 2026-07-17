@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#08090b">
+  <title>CHESS STAGE — EASY CPU</title>
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #08090b;
+    }
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 100dvh;
+      border: 0;
+      background: #08090b;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="gameFrame" src="./index.html" title="CHESS STAGE"></iframe>
+
+  <script>
+    const gameFrame = document.getElementById("gameFrame");
+
+    gameFrame.addEventListener("load", () => {
+      const frameDocument = gameFrame.contentDocument;
+      const patch = frameDocument.createElement("script");
+
+      patch.textContent = `
+        (() => {
+          const originalCpuMove = cpuMove;
+          let easyMode = true;
+
+          const controls = document.querySelector(".game-controls");
+          if (controls && !document.getElementById("difficultyButton")) {
+            controls.style.gridTemplateColumns = "repeat(3, minmax(0, 1fr))";
+
+            const difficultyButton = document.createElement("button");
+            difficultyButton.id = "difficultyButton";
+            difficultyButton.className = "control-button active";
+            difficultyButton.type = "button";
+            difficultyButton.innerHTML =
+              '<span class="control-label">LEVEL</span>' +
+              '<span id="difficultyState" class="control-value">EASY</span>';
+
+            controls.insertBefore(difficultyButton, controls.lastElementChild);
+
+            difficultyButton.addEventListener("click", () => {
+              easyMode = !easyMode;
+              difficultyButton.classList.toggle("active", easyMode);
+              document.getElementById("difficultyState").textContent =
+                easyMode ? "EASY" : "NORMAL";
+              showToast(easyMode ? "CPU LEVEL — EASY" : "CPU LEVEL — NORMAL");
+            });
+          }
+
+          cpuMove = function patchedCpuMove() {
+            if (!easyMode) {
+              originalCpuMove();
+              return;
+            }
+
+            if (!game || game.over || game.turn !== "b") {
+              cpuThinking = false;
+              if (game) renderStatus();
+              return;
+            }
+
+            try {
+              const moves = legalMoves(game);
+
+              if (!moves.length) {
+                const end = gameEndState(game);
+                game.over = end.over;
+                cpuThinking = false;
+                renderBoard();
+                if (end.over) showResult(end);
+                return;
+              }
+
+              const values = {
+                P: 100,
+                N: 320,
+                B: 330,
+                R: 500,
+                Q: 900,
+                K: 20000
+              };
+
+              function materialValue(state) {
+                let score = 0;
+
+                for (let r = 0; r < 8; r += 1) {
+                  for (let c = 0; c < 8; c += 1) {
+                    const piece = state.board[r][c];
+                    if (!piece) continue;
+                    const value = values[piece.type] || 0;
+                    score += piece.color === "b" ? value : -value;
+                  }
+                }
+
+                return score;
+              }
+
+              const scoredMoves = moves.map((move) => {
+                const choice = {
+                  ...move,
+                  promotion: move.promotion ? "Q" : move.promotion
+                };
+
+                const afterCpu = applyMove(game, choice);
+                const end = gameEndState(afterCpu);
+
+                if (end.over && end.winner === "b") {
+                  return { move: choice, score: 1000000 };
+                }
+
+                if (end.over) {
+                  return { move: choice, score: 0 };
+                }
+
+                const whiteMoves = legalMoves(afterCpu);
+                let worstReply = materialValue(afterCpu);
+
+                if (isInCheck(afterCpu, "w")) {
+                  worstReply += 24;
+                }
+
+                if (whiteMoves.length) {
+                  worstReply = Infinity;
+
+                  whiteMoves.forEach((whiteMove) => {
+                    const whiteChoice = {
+                      ...whiteMove,
+                      promotion: whiteMove.promotion ? "Q" : whiteMove.promotion
+                    };
+                    const afterWhite = applyMove(afterCpu, whiteChoice);
+                    const whiteEnd = gameEndState(afterWhite);
+                    let replyScore = materialValue(afterWhite);
+
+                    if (whiteEnd.over && whiteEnd.winner === "w") {
+                      replyScore = -1000000;
+                    } else if (whiteEnd.over) {
+                      replyScore = 0;
+                    }
+
+                    worstReply = Math.min(worstReply, replyScore);
+                  });
+                }
+
+                return { move: choice, score: worstReply };
+              });
+
+              scoredMoves.sort((a, b) => b.score - a.score);
+
+              const poolSize = Math.min(
+                scoredMoves.length,
+                Math.max(4, Math.ceil(scoredMoves.length * 0.4))
+              );
+              const candidatePool = scoredMoves.slice(0, poolSize);
+              const chosen = candidatePool[
+                Math.floor(Math.random() * candidatePool.length)
+              ].move;
+
+              commitMove(chosen);
+            } catch (error) {
+              cpuThinking = false;
+              console.error("Easy CPU move failed", error);
+              renderStatus();
+              showToast("CPU MOVE ERROR");
+            }
+          };
+        })();
+      `;
+
+      frameDocument.body.appendChild(patch);
+    });
+  </script>
+</body>
+</html>
