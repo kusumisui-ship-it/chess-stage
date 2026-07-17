@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#08090b">
+  <title>CHESS STAGE — PLAY</title>
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #08090b;
+    }
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 100dvh;
+      border: 0;
+      background: #08090b;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="easyFrame" src="./easy.html" title="CHESS STAGE"></iframe>
+
+  <script>
+    const easyFrame = document.getElementById("easyFrame");
+
+    function installBoardLock() {
+      const easyDocument = easyFrame.contentDocument;
+      if (!easyDocument) return;
+
+      const gameFrame = easyDocument.getElementById("gameFrame");
+      if (!gameFrame) return;
+
+      function patchGameFrame() {
+        const gameDocument = gameFrame.contentDocument;
+        if (!gameDocument || !gameDocument.body) return;
+
+        const patch = gameDocument.createElement("script");
+        patch.textContent = `
+          (() => {
+            const flipButton = document.getElementById("flipBoardButton");
+            if (!flipButton || flipButton.dataset.cpuViewLocked === "true") {
+              return;
+            }
+
+            boardFlipped = false;
+            renderBoard();
+
+            flipButton.dataset.cpuViewLocked = "true";
+            flipButton.setAttribute("aria-disabled", "true");
+            flipButton.style.opacity = "0.32";
+            flipButton.style.cursor = "default";
+
+            flipButton.addEventListener(
+              "click",
+              (event) => {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                boardFlipped = false;
+                renderBoard();
+                showToast("WHITE VIEW LOCKED");
+              },
+              true
+            );
+          })();
+        `;
+
+        gameDocument.body.appendChild(patch);
+      }
+
+      gameFrame.addEventListener("load", patchGameFrame);
+      patchGameFrame();
+    }
+
+    easyFrame.addEventListener("load", installBoardLock);
+  </script>
+</body>
+</html>
