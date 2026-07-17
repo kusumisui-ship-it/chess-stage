@@ -1,0 +1,1 @@
+Checkpoint note created before modifying easy.html. Existing rollback branch: checkpoint/save-v3-failed.
