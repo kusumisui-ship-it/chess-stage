@@ -44,13 +44,17 @@
         const patch = gameDocument.createElement("script");
         patch.textContent = `
           (() => {
-            const undoButton = document.getElementById("flipBoardButton");
-            if (!undoButton || undoButton.dataset.cpuUndoReady === "true") {
+            const originalFlipButton = document.getElementById("flipBoardButton");
+            if (!originalFlipButton) return;
+
+            if (originalFlipButton.dataset.cpuUndoReady === "true") {
+              boardFlipped = false;
+              renderBoard();
               return;
             }
 
-            boardFlipped = false;
-            renderBoard();
+            const undoButton = originalFlipButton.cloneNode(true);
+            originalFlipButton.replaceWith(undoButton);
 
             undoButton.dataset.cpuUndoReady = "true";
             undoButton.textContent = "↶";
@@ -58,6 +62,9 @@
             undoButton.removeAttribute("aria-disabled");
             undoButton.style.opacity = "1";
             undoButton.style.cursor = "pointer";
+
+            boardFlipped = false;
+            renderBoard();
 
             function cleanMove(move) {
               return {
@@ -111,15 +118,7 @@
               showToast(removeCount === 1 ? "MOVE UNDONE" : "TURN UNDONE");
             }
 
-            undoButton.addEventListener(
-              "click",
-              (event) => {
-                event.preventDefault();
-                event.stopImmediatePropagation();
-                undoPlayerTurn();
-              },
-              true
-            );
+            undoButton.addEventListener("click", undoPlayerTurn);
           })();
         `;
 
