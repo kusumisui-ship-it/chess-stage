@@ -30,7 +30,7 @@
   <script>
     const easyFrame = document.getElementById("easyFrame");
 
-    function installBoardLock() {
+    function installCpuControls() {
       const easyDocument = easyFrame.contentDocument;
       if (!easyDocument) return;
 
@@ -44,27 +44,79 @@
         const patch = gameDocument.createElement("script");
         patch.textContent = `
           (() => {
-            const flipButton = document.getElementById("flipBoardButton");
-            if (!flipButton || flipButton.dataset.cpuViewLocked === "true") {
+            const undoButton = document.getElementById("flipBoardButton");
+            if (!undoButton || undoButton.dataset.cpuUndoReady === "true") {
               return;
             }
 
             boardFlipped = false;
             renderBoard();
 
-            flipButton.dataset.cpuViewLocked = "true";
-            flipButton.setAttribute("aria-disabled", "true");
-            flipButton.style.opacity = "0.32";
-            flipButton.style.cursor = "default";
+            undoButton.dataset.cpuUndoReady = "true";
+            undoButton.textContent = "↶";
+            undoButton.setAttribute("aria-label", "1ターン戻す");
+            undoButton.removeAttribute("aria-disabled");
+            undoButton.style.opacity = "1";
+            undoButton.style.cursor = "pointer";
 
-            flipButton.addEventListener(
+            function cleanMove(move) {
+              return {
+                from: move.from,
+                to: move.to,
+                promotion: move.promotion,
+                enPassant: move.enPassant,
+                castle: move.castle
+              };
+            }
+
+            function undoPlayerTurn() {
+              if (!game || !game.history || game.history.length === 0) {
+                showToast("NO TURN TO UNDO");
+                return;
+              }
+
+              if (pendingPromotion) {
+                showToast("FINISH PROMOTION FIRST");
+                return;
+              }
+
+              if (game.over) {
+                showToast("GAME ALREADY ENDED");
+                return;
+              }
+
+              const removeCount = game.turn === "b" || cpuThinking ? 1 : 2;
+              const keepCount = Math.max(0, game.history.length - removeCount);
+              const retainedMoves = game.history
+                .slice(0, keepCount)
+                .map(cleanMove);
+
+              gameSessionId += 1;
+              clearGameTimers();
+              cpuThinking = false;
+              selectedSquare = null;
+              legalTargets = [];
+              pendingPromotion = null;
+              hidePromotion();
+              hideResult();
+
+              let rebuiltGame = createGameFromFen(START_FEN);
+              retainedMoves.forEach((move) => {
+                rebuiltGame = applyMove(rebuiltGame, move);
+              });
+
+              game = rebuiltGame;
+              boardFlipped = false;
+              renderBoard();
+              showToast(removeCount === 1 ? "MOVE UNDONE" : "TURN UNDONE");
+            }
+
+            undoButton.addEventListener(
               "click",
               (event) => {
                 event.preventDefault();
                 event.stopImmediatePropagation();
-                boardFlipped = false;
-                renderBoard();
-                showToast("WHITE VIEW LOCKED");
+                undoPlayerTurn();
               },
               true
             );
@@ -78,7 +130,7 @@
       patchGameFrame();
     }
 
-    easyFrame.addEventListener("load", installBoardLock);
+    easyFrame.addEventListener("load", installCpuControls);
   </script>
 </body>
 </html>
