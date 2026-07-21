@@ -1,0 +1,32 @@
+name: Offline build checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        run: |
+          node --check engine-core.js
+          node --check engine-rules.js
+          node --check engine-ai.js
+          node --check app-core.js
+          node --check app-views.js
+          node --check app-game.js
+          node --check app-runtime.js
+      - name: Run chess engine tests
+        run: node tests/engine.test.js
