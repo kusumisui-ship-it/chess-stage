@@ -28,5 +28,6 @@ jobs:
           node --check app-views.js
           node --check app-game.js
           node --check app-runtime.js
+          node --check app-board-polish.js
       - name: Run chess engine tests
         run: node tests/engine.test.js
