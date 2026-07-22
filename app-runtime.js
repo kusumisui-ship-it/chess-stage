@@ -95,8 +95,8 @@ viewRoot.addEventListener("click", (event) => {
   }
   const action = target.dataset.action;
   if (action === "start") return startConfiguredGame();
+  if (action === "open-setup") return openMatchSetupModal();
   if (action === "resume") return resumeGame();
-  if (action === "scroll-builder") return document.getElementById("matchBuilder")?.scrollIntoView({ behavior: "smooth" });
   if (action === "fen") return openFenModal();
   if (action === "clear-records") return clearRecords();
   if (action === "delete-session") {
@@ -115,6 +115,11 @@ modalRoot.addEventListener("click", (event) => {
   const target = event.target.closest("button");
   if (!target) return;
   if (target.hasAttribute("data-close-modal")) return closeModal();
+  if (target.dataset.setupGroup) {
+    const key = target.dataset.setupGroup;
+    setup[key] = key === "clock" ? Number(target.dataset.setupValue) : target.dataset.setupValue;
+    return openMatchSetupModal();
+  }
   if (target.dataset.fenMode) {
     modalRoot.querySelectorAll("[data-fen-mode]").forEach((button) => button.classList.toggle("active", button === target));
     return;
@@ -126,6 +131,7 @@ modalRoot.addEventListener("click", (event) => {
   }
   if (target.dataset.deleteRecord) return deleteRecord(target.dataset.deleteRecord);
   const action = target.dataset.action;
+  if (action === "start") return startConfiguredGame();
   if (action === "start-fen") return startFenGame();
   if (action === "copy-pgn") return copyText(currentPgn(), "PGNをコピーしました");
   if (action === "copy-fen") return copyText(E.toFen(session.game), "FENをコピーしました");
