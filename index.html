@@ -7,6 +7,7 @@
   <meta name="description" content="CHESS STAGE — チェスのルールは変えない。体験を変える。オフラインテストビルド。">
   <title>CHESS STAGE — Offline Build</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="board-polish.css">
 </head>
 <body>
   <div id="appShell" class="app-shell">
@@ -84,10 +85,13 @@
           <button id="claimDrawButton" class="tool-button" type="button" hidden><span>=</span><small>CLAIM</small></button>
         </section>
 
-        <section class="move-panel">
+        <section class="move-panel collapsed">
           <div class="move-panel-head">
             <span>MOVE LIST</span>
-            <button id="copyPgnInlineButton" class="text-button" type="button">PGN COPY</button>
+            <div class="move-panel-actions">
+              <button id="movePanelToggle" class="move-panel-toggle" type="button" aria-expanded="false">SHOW</button>
+              <button id="copyPgnInlineButton" class="text-button" type="button">PGN COPY</button>
+            </div>
           </div>
           <div id="moveList" class="move-list"><p class="empty-copy">対局を開始すると棋譜が表示されます。</p></div>
         </section>
@@ -128,5 +132,6 @@
   <script src="app-views.js"></script>
   <script src="app-game.js"></script>
   <script src="app-runtime.js"></script>
+  <script src="app-board-polish.js"></script>
 </body>
 </html>
