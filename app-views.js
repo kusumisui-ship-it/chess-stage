@@ -1,7 +1,6 @@
 "use strict";
 
 function renderHome() {
-  const summary = stats();
   const continueMarkup = savedSession && !savedSession.game.over ? `
     <section class="section">
       <div class="continue-card">
@@ -15,65 +14,54 @@ function renderHome() {
     </section>` : "";
 
   return `
-    <div class="page">
+    <div class="page home-page">
       <section class="hero">
         <span class="eyebrow">READY</span>
         <h1 class="hero-title">YOUR <span>MOVE.</span></h1>
-        <p class="hero-copy">チェスのルールは変えない。まずはオフラインで、対局・学習・棋譜保存まで一通り触れるテストビルド。</p>
+        <p class="hero-copy">チェスのルールは変えない。対局するか、続きを指すか。</p>
         <div class="hero-actions">
-          <button class="primary-button" type="button" data-action="scroll-builder">START MATCH</button>
+          <button class="primary-button" type="button" data-action="open-setup">START MATCH</button>
           <button class="secondary-button" type="button" data-view-link="learn">LEARN</button>
         </div>
       </section>
 
       ${continueMarkup}
-
-      <section id="matchBuilder" class="section">
-        <div class="section-head"><h2>Match Setup</h2><span>ONLINE機能なし</span></div>
-        <div class="builder">
-          ${builderRow("MODE", "対局形式", [
-            choice("mode", "cpu", "CPU", "1人用", setup.mode === "cpu"),
-            choice("mode", "local", "LOCAL", "同じ端末", setup.mode === "local")
-          ], 2)}
-          ${setup.mode === "cpu" ? builderRow("LEVEL", "CPU強さ", [
-            choice("difficulty", "easy", "EASY", "軽い", setup.difficulty === "easy"),
-            choice("difficulty", "normal", "NORMAL", "標準", setup.difficulty === "normal"),
-            choice("difficulty", "hard", "HARD", "読み重視", setup.difficulty === "hard")
-          ], 3) : ""}
-          ${builderRow("SIDE", setup.mode === "cpu" ? "あなたの色" : "下側に置く色", [
-            choice("color", "white", "WHITE", "先手", setup.color === "white"),
-            choice("color", "black", "BLACK", "後手", setup.color === "black"),
-            ...(setup.mode === "cpu" ? [choice("color", "random", "RANDOM", "自動", setup.color === "random")] : [])
-          ], setup.mode === "cpu" ? 3 : 2)}
-          ${builderRow("CLOCK", "持ち時間", [
-            choice("clock", "0", "NONE", "無制限", Number(setup.clock) === 0),
-            choice("clock", "5", "5 MIN", "早指し", Number(setup.clock) === 5),
-            choice("clock", "10", "10 MIN", "標準", Number(setup.clock) === 10),
-            choice("clock", "15", "15 MIN", "長め", Number(setup.clock) === 15)
-          ], 4)}
-          <button class="primary-button builder-start" type="button" data-action="start">START OFFLINE MATCH</button>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-head"><h2>Quick Access</h2></div>
-        <div class="quick-grid">
-          ${quickCard("♙", "LESSONS", "特殊ルールと1手詰め", "learn")}
-          ${quickCard("☷", "RECORDS", "端末内の棋譜を見る", "records")}
-          ${quickCard("♜", "FEN START", "任意局面から試す", "fen")}
-          ${quickCard("⚙", "SETTINGS", "表示と操作を調整", "settings")}
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-head"><h2>Local Stats</h2></div>
-        <div class="stat-grid">
-          <div class="stat-card"><strong>${summary.games}</strong><span>GAMES</span></div>
-          <div class="stat-card"><strong>${summary.wins}</strong><span>CPU WINS</span></div>
-          <div class="stat-card"><strong>${completedLessons.length}/${LESSONS.length}</strong><span>LESSONS</span></div>
-        </div>
-      </section>
     </div>`;
+}
+
+function renderMatchSetupModal() {
+  return `
+    <div class="modal-head">
+      <div><span class="eyebrow">OFFLINE MATCH</span><h2>Match Setup</h2></div>
+      <button class="close-button" type="button" data-close-modal>×</button>
+    </div>
+    <div class="builder">
+      ${builderRow("MODE", "対局形式", [
+        choice("mode", "cpu", "CPU", "1人用", setup.mode === "cpu"),
+        choice("mode", "local", "LOCAL", "同じ端末", setup.mode === "local")
+      ], 2)}
+      ${setup.mode === "cpu" ? builderRow("LEVEL", "CPU強さ", [
+        choice("difficulty", "easy", "EASY", "軽い", setup.difficulty === "easy"),
+        choice("difficulty", "normal", "NORMAL", "標準", setup.difficulty === "normal"),
+        choice("difficulty", "hard", "HARD", "読み重視", setup.difficulty === "hard")
+      ], 3) : ""}
+      ${builderRow("SIDE", setup.mode === "cpu" ? "あなたの色" : "下側に置く色", [
+        choice("color", "white", "WHITE", "先手", setup.color === "white"),
+        choice("color", "black", "BLACK", "後手", setup.color === "black"),
+        ...(setup.mode === "cpu" ? [choice("color", "random", "RANDOM", "自動", setup.color === "random")] : [])
+      ], setup.mode === "cpu" ? 3 : 2)}
+      ${builderRow("CLOCK", "持ち時間", [
+        choice("clock", "0", "NONE", "無制限", Number(setup.clock) === 0),
+        choice("clock", "5", "5 MIN", "早指し", Number(setup.clock) === 5),
+        choice("clock", "10", "10 MIN", "標準", Number(setup.clock) === 10),
+        choice("clock", "15", "15 MIN", "長め", Number(setup.clock) === 15)
+      ], 4)}
+      <button class="primary-button builder-start" type="button" data-action="start">START OFFLINE MATCH</button>
+    </div>`;
+}
+
+function openMatchSetupModal() {
+  openModal(renderMatchSetupModal());
 }
 
 function builderRow(title, subtitle, choices, columns) {
